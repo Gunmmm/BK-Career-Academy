@@ -1,0 +1,8 @@
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+fs-extra>=0.0.1  # Note: This is for the JS version, Python doesn't need it. 
+# Re-writing Python specific requirements:
+requests==2.31.0
+beautifulsoup4==4.12.2
+lxml==4.9.3

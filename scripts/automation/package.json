@@ -1,0 +1,16 @@
+{
+  "name": "bk-paper-scraper",
+  "version": "1.0.0",
+  "description": "Automated question paper downloader for BK Career Academy",
+  "main": "paperScraper.js",
+  "scripts": {
+    "start": "node paperScraper.js",
+    "mumbai": "node paperScraper.js Mumbai High-Court",
+    "pune": "node paperScraper.js Pune District-Court"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "fs-extra": "^11.1.1"
+  }
+}
