@@ -88,7 +88,22 @@ export default function ChatWidget() {
       });
       const data = await response.json();
       if (data.success) {
-        setMessages(prev => [...prev, { role: 'bot', text: `✅ OFFICIAL RECORD: Ticket Raised. Ref Name: ${ticketForm.name}. Response expected within 24 operational hours. JAY HIND.` }]);
+        const whatsappMsg = `Hi BK Academy, I have raised a ticket.\n\nName: ${ticketForm.name}\nPhone: ${ticketForm.phone}\nIssue: ${ticketForm.issue}`;
+        const whatsappUrl = `https://wa.me/918080195558?text=${encodeURIComponent(whatsappMsg)}`;
+        
+        setMessages(prev => [...prev, { 
+          role: 'bot', 
+          text: `✅ OFFICIAL RECORD: Ticket Raised. Ref Name: ${ticketForm.name}. I have also prepared a WhatsApp report for administrative priority.` 
+        }]);
+        
+        // Add a special button for WhatsApp
+        setTimeout(() => {
+          setMessages(prev => [...prev, { 
+            role: 'bot', 
+            text: `Click below to automatically forward this to our headquarters (8080195558) for faster processing: \n\n[SEND ON WHATSAPP](${whatsappUrl})` 
+          }]);
+        }, 1000);
+
         setIsRaisingTicket(false);
         setTicketForm({ name: '', phone: '', issue: '' });
       }
@@ -146,8 +161,31 @@ export default function ChatWidget() {
             <div ref={scrollRef} className="flex-grow overflow-y-auto p-4 space-y-4 bg-background scroll-smooth">
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`p-3 px-4 text-[13px] ${msg.role === 'user' ? 'bg-brand text-ink font-semibold' : 'bg-white border-2 border-ink/10 text-ink'}`}>
-                    {msg.text}
+                  <div className={`p-3 px-4 text-[13px] ${msg.role === 'user' ? 'bg-brand text-ink font-semibold' : 'bg-white border-2 border-ink/10 text-ink shadow-sm'}`}>
+                    {msg.text.includes('[') ? (
+                      <div>
+                        {msg.text.split(/(\[.*?\]\(.*?\))/).map((part, index) => {
+                          const match = part.match(/\[(.*?)\]\((.*?)\)/);
+                          if (match) {
+                            return (
+                              <a 
+                                key={index} 
+                                href={match[2]} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 mt-2 font-black uppercase text-[10px] hover:bg-green-700 transition-all rounded-sm shadow-md"
+                              >
+                                <MessageSquare size={12} />
+                                {match[1]}
+                              </a>
+                            );
+                          }
+                          return <span key={index}>{part}</span>;
+                        })}
+                      </div>
+                    ) : (
+                      msg.text
+                    )}
                   </div>
                 </div>
               ))}

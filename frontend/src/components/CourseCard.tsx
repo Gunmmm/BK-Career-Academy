@@ -7,7 +7,7 @@ interface Course {
   title: string;
   category: string;
   instructor: string;
-  isNew: boolean;
+  isRecent: boolean;
   image: string;
 }
 
@@ -76,7 +76,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course, index, onClick }
             referrerPolicy="no-referrer"
           />
         </div>
-        {course.isNew && (
+        {course.isRecent && (
           <div className="absolute top-6 right-6">
             <span className="bg-brand/90 text-ink text-[10px] font-bold px-4 py-1.5 rounded-full shadow-lg shadow-brand/20 uppercase tracking-widest border border-ink/5">
               NEW

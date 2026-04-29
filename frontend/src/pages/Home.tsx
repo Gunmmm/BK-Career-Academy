@@ -445,46 +445,49 @@ export const Home: React.FC<HomeProps> = ({
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[
-              { name: "THE HINDU", url: "https://www.thehindu.com", logo: "/images/resources/the-hindu-new.webp" },
-              { name: "PIB INDIA", url: "https://pib.gov.in", logo: "/images/resources/press-information-bureau.webp" },
-              { name: "THE INDIAN EXPRESS", url: "https://indianexpress.com", logo: "/images/resources/the-indian-express.webp" },
-              { name: "LOKSATTA", url: "https://www.loksatta.com", logo: "/images/resources/loksatta.png" },
-              { name: "UPSC", url: "https://www.upsc.gov.in", logo: "/images/resources/upscs.jpeg" },
-              { name: "MPSC", url: "https://mpsc.gov.in", logo: "/images/resources/mpsc-logo.webp", scale: 1.4 },
-              { name: "SSC", url: "https://ssc.nic.in", logo: "/images/resources/ssc-resc-logo.webp", scale: 1.4 },
-              { name: "RBI", url: "https://www.rbi.org.in", logo: "/images/resources/download.jpg" },
-              { name: "INDIAN RAILWAYS", url: "https://indianrailways.gov.in", logo: "/images/resources/railways-logo.webp" },
-              { name: "MAHARASHTRA TIMES", url: "https://maharashtratimes.com", logo: "/images/resources/maharashtra-times.webp" },
-              { name: "MY GOV", url: "https://www.mygov.in", logo: "/images/resources/my-gov.webp" },
-              { name: "AAPLE SARKAR", url: "https://aaplesarkar.mahaonline.gov.in", logo: "/images/resources/aaple-sarkar.webp" },
-            ].map((res, i) => (
-              <a 
-                key={res.name}
-                href={res.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-white border-2 border-gray-100 rounded-2xl p-10 flex flex-col items-center justify-center text-center shadow-[0_4px_30px_rgba(0,0,0,0.06)] hover:shadow-[0_15px_50px_rgba(0,0,0,0.12)] hover:-translate-y-2 transition-all duration-300 min-h-[220px] group overflow-hidden"
-              >
-                {/* Logo and Name */}
-                <div className="flex flex-col items-center gap-6 w-full">
-                  <div className="relative w-full h-[140px] flex items-center justify-center">
-                    <img 
-                      src={res.logo} 
-                      alt={res.name}
-                      style={{ transform: `scale(${res.scale || 1})` }}
-                      className="max-w-full max-h-[120%] object-contain transition-all duration-500 transform group-hover:scale-[1.2]"
-                    />
+              {([
+                { name: "THE HINDU", url: "https://www.thehindu.com", logo: "/images/resources/the-hindu-new.webp" },
+                { name: "PIB INDIA", url: "https://pib.gov.in", logo: "/images/resources/press-information-bureau.webp" },
+                { name: "THE INDIAN EXPRESS", url: "https://indianexpress.com", logo: "/images/resources/the-indian-express.webp" },
+                { name: "LOKSATTA", url: "https://www.loksatta.com", logo: "/images/resources/loksatta.png" },
+                { name: "UPSC", url: "https://www.upsc.gov.in", logo: "/images/resources/upscs.jpeg" },
+                { name: "MPSC", url: "https://mpsc.gov.in", logo: "/images/resources/mpsc-logo.webp", scale: 1.4 },
+                { name: "SSC", url: "https://ssc.nic.in", logo: "/images/resources/ssc-resc-logo.webp", scale: 1.4 },
+                { name: "RBI", url: "https://www.rbi.org.in", logo: "/images/resources/download.jpg" },
+                { name: "INDIAN RAILWAYS", url: "https://indianrailways.gov.in", logo: "/images/resources/railways-logo.webp" },
+                { name: "MAHARASHTRA TIMES", url: "https://maharashtratimes.com", logo: "/images/resources/maharashtra-times.webp" },
+                { name: "MY GOV", url: "https://www.mygov.in", logo: "/images/resources/my-gov.webp" },
+                { name: "AAPLE SARKAR", url: "https://aaplesarkar.mahaonline.gov.in", logo: "/images/resources/aaple-sarkar.webp" },
+              ]).map((res, i) => (
+                <article 
+                  key={res.name}
+                  className="bg-white border-2 border-gray-100 rounded-2xl p-10 flex flex-col items-center justify-center text-center shadow-[0_4px_30px_rgba(0,0,0,0.06)] hover:shadow-[0_15px_50px_rgba(0,0,0,0.12)] hover:-translate-y-2 transition-all duration-300 min-h-[220px] group overflow-hidden"
+                >
+                  <a 
+                    href={res.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-6 w-full"
+                  >
+                    {/* Logo and Name */}
+                    <div className="relative w-full h-[140px] flex items-center justify-center">
+                      <img 
+                        src={res.logo} 
+                        alt={`${res.name} official resource for competitive exams`}
+                        style={{ transform: `scale(${res.scale || 1})` }}
+                        loading="lazy"
+                        className="max-w-full max-h-[120%] object-contain transition-all duration-500 transform group-hover:scale-[1.2]"
+                      />
+                    </div>
+                    <span className="text-[18px] font-display font-black text-ink uppercase tracking-tighter group-hover:text-brand transition-colors text-center px-2 leading-none">
+                      {res.name}
+                    </span>
+                  </a>
+                  <div className="absolute top-2 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                     <ExternalLink size={12} className="text-ink/30" />
                   </div>
-                  <span className="text-[18px] font-display font-black text-ink uppercase tracking-tighter group-hover:text-brand transition-colors text-center px-2 leading-none">
-                    {res.name}
-                  </span>
-                </div>
-                <div className="absolute top-2 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                   <ExternalLink size={12} className="text-ink/30" />
-                </div>
-              </a>
-            ))}
+                </article>
+              ))}
           </div>
         </div>
       </section>

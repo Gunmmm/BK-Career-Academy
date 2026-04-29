@@ -182,7 +182,7 @@ export default function AdminPortal({ onBack, onUpdate }: AdminPortalProps) {
       if (data.success) {
         const ticketsData = data.tickets || [];
         setTickets(ticketsData);
-        const newTicket = ticketsData.find((t: any) => t.isNew);
+        const newTicket = ticketsData.find((t: any) => t.isUnread);
         if (newTicket && !newTicketAlert) {
           setNewTicketAlert(newTicket);
           setTimeout(() => setNewTicketAlert(null), 10000);
@@ -1080,7 +1080,7 @@ export default function AdminPortal({ onBack, onUpdate }: AdminPortalProps) {
             }} className={`flex items-center gap-4 p-6 border-b border-ink/5 ${activeTab === item.id ? 'bg-brand text-ink border-l-[12px] border-ink' : 'text-ink/40'}`}>
               <item.icon size={20} />
               <span className="font-display font-bold uppercase text-[10px] tracking-widest">{item.label}</span>
-              {item.id === 'tickets' && tickets.some(t => t.isNew) && <div className="ml-auto w-2 h-2 rounded-full bg-red-600 animate-ping" />}
+              {item.id === 'tickets' && tickets.some(t => t.isUnread) && <div className="ml-auto w-2 h-2 rounded-full bg-red-600 animate-ping" />}
             </button>
           ))}
         </aside>
@@ -1143,7 +1143,7 @@ export default function AdminPortal({ onBack, onUpdate }: AdminPortalProps) {
                       const student = registrations.find(r => r.phone === t.phone);
                       const isSelected = selectedTicketIds.includes(t._id);
                       return (
-                        <div key={t._id} className={`bg-white border-4 p-6 transition-all relative ${isSelected ? 'border-brand bg-brand/5 shadow-[8px_8px_0_0_#000]' : t.isNew ? 'border-brand shadow-[8px_8px_0px_0px_rgba(255,193,7,1)]' : 'border-ink shadow-[4px_4px_0px_1px_rgba(0,0,0,0.1)]'}`}>
+                        <div key={t._id} className={`bg-white border-4 p-6 transition-all relative ${isSelected ? 'border-brand bg-brand/5 shadow-[8px_8px_0_0_#000]' : t.isUnread ? 'border-brand shadow-[8px_8px_0px_0px_rgba(255,193,7,1)]' : 'border-ink shadow-[4px_4px_0px_1px_rgba(0,0,0,0.1)]'}`}>
                            {/* Checkbox */}
                            <div className="absolute -left-3 top-1/2 -translate-y-1/2 bg-white border-4 border-ink p-1">
                              <input 
@@ -1180,7 +1180,7 @@ export default function AdminPortal({ onBack, onUpdate }: AdminPortalProps) {
                                  <div className="text-[9px] font-mono text-ink/30 uppercase">{new Date(t.createdAt).toLocaleString()}</div>
                               </div>
                               <div className="flex flex-col items-end gap-3">
-                                 {t.isNew && (
+                                 {t.isUnread && (
                                     <motion.div 
                                       animate={{ scale: [1, 1.1, 1] }}
                                       transition={{ repeat: Infinity, duration: 1.5 }}

@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Ticket = require('../models/Ticket');
 const Download = require('../models/Download');
+const axios = require('axios');
 
 // Knowledge Base for the Assistant
 const ACADEMY_KNOWLEDGE = {
@@ -113,8 +114,27 @@ exports.raiseTicket = async (req, res) => {
     if (!name || !phone || !issue) {
       return res.status(400).json({ success: false, message: 'Missing fields' });
     }
+    
+    // Save to database
     await Ticket.create({ name, phone, issue });
-    res.status(201).json({ success: true, message: 'Ticket raised' });
+
+    // TODO: Integrate with a WhatsApp/SMS API provider here
+    // Example payload for admin notification
+    const adminPhone = '8080195558';
+    const message = `🔔 NEW TICKET RAISED\n\nName: ${name}\nPhone: ${phone}\nIssue: ${issue}\n\nProtocol: Administrative Action Required.`;
+    
+    console.log(`[NOTIFICATION] Sending to ${adminPhone}: ${message}`);
+    // If you have a WhatsApp API (like Twilio or a local provider), call it here:
+    // await axios.post('YOUR_API_URL', { to: adminPhone, message });
+
+    res.status(201).json({ 
+      success: true, 
+      message: 'Ticket raised',
+      adminNotification: {
+        target: adminPhone,
+        text: message
+      }
+    });
   } catch (err) {
     res.status(500).json({ success: false });
   }

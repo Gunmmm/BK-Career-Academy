@@ -7,6 +7,7 @@ const WebContentSchema = new mongoose.Schema({
   subCategory: { type: String }, 
   instructor: { type: String },
   image: { type: String },
+  isRecent: { type: Boolean, default: false },
   isFeatured: { type: Boolean, default: true },
   status: { type: String, default: 'published' },
   examDate: { type: Date }, // Exam date for countdown timer

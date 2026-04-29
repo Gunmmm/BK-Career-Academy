@@ -53,7 +53,7 @@ exports.getTickets = asyncHandler(async (req, res) => {
 // @route   POST /api/admin/tickets/seen
 // @access  Private (Admin)
 exports.markTicketsSeen = asyncHandler(async (req, res) => {
-  await Ticket.updateMany({ isNew: true }, { $set: { isNew: false } });
+  await Ticket.updateMany({ isUnread: true }, { $set: { isUnread: false } });
   res.status(200).json({ success: true });
 });
 

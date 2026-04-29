@@ -5,7 +5,7 @@ const ticketSchema = new mongoose.Schema({
   phone: { type: String, required: true },
   issue: { type: String, required: true },
   status: { type: String, default: 'pending', enum: ['pending', 'resolved'] },
-  isNew: { type: Boolean, default: true },
+  isUnread: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now }
 });
 

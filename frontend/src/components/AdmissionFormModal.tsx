@@ -51,6 +51,10 @@ export default function AdmissionFormModal({ isOpen, onClose }: AdmissionFormMod
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
+  const [admissionId, setAdmissionId] = useState<string | null>(null);
+  const [razorpayPaymentId, setRazorpayPaymentId] = useState<string | null>(null);
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -219,7 +223,10 @@ export default function AdmissionFormModal({ isOpen, onClose }: AdmissionFormMod
           formNo: data.data.formNo
         }));
         setIsSubmitting(false);
+        setAdmissionId(data.data.id);
         setIsSubmitted(true);
+        // Automatically trigger payment flow
+        handlePayment(data.data.id);
       } else {
         const errorMsg = data.error ? data.error.join('\n') : data.message;
         alert('Form Error:\n' + errorMsg);
@@ -228,7 +235,73 @@ export default function AdmissionFormModal({ isOpen, onClose }: AdmissionFormMod
     } catch (err) {
       console.error(err);
       setIsSubmitting(false);
-      setIsSubmitted(true); // Fallback to handle offline test cases
+      alert('Failed to submit form. Please check your internet connection.');
+    }
+  };
+
+  const handlePayment = async (id: string) => {
+    try {
+      const response = await fetch('/api/payment/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ admissionId: id })
+      });
+      const data = await response.json();
+      
+      if (!data.success) {
+        alert('Payment initialization failed: ' + data.message);
+        return;
+      }
+
+      const options = {
+        key: data.key,
+        amount: data.amount,
+        currency: data.currency,
+        name: "BK Career Academy",
+        description: "Admission Form Fee",
+        order_id: data.orderId,
+        handler: async function (response: any) {
+          setIsVerifyingPayment(true);
+          try {
+            const verifyRes = await fetch('/api/payment/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                admissionId: id
+              })
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) {
+              setRazorpayPaymentId(response.razorpay_payment_id);
+              setIsPaid(true);
+            } else {
+              alert('Payment verification failed. Please contact support.');
+            }
+          } catch (err) {
+            console.error('Verification error:', err);
+            alert('Something went wrong during verification.');
+          } finally {
+            setIsVerifyingPayment(false);
+          }
+        },
+        prefill: {
+          name: `${formData.firstName} ${formData.surname}`,
+          email: formData.email,
+          contact: formData.mobileSelf
+        },
+        theme: {
+          color: "#800000"
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error('Payment error:', err);
+      alert('Failed to start payment process.');
     }
   };
 
@@ -297,10 +370,13 @@ export default function AdmissionFormModal({ isOpen, onClose }: AdmissionFormMod
             .footer { border-top: 1px solid #eee; padding-top: 15px; margin-top: 40px; display: flex; justify-content: space-between; font-size: 9px; color: #666; width: 100%; }
             .contact-info { display: flex; gap: 15px; }
             .contact-info span { font-weight: 700; color: #1a1a1a; }
+
+            .payment-badge { position: absolute; top: 15mm; right: 15mm; border: 3px solid #059669; color: #059669; padding: 4px 12px; font-size: 14px; font-weight: 900; text-transform: uppercase; transform: rotate(15deg); border-radius: 8px; background: rgba(5, 150, 105, 0.05); }
           </style>
         </head>
         <body>
           <div class="page">
+            ${isPaid ? `<div class="payment-badge">PAID ONLINE</div>` : ''}
             <div class="header-container">
               <div class="logo-section">
                 ${logoBase64 ? `<img src="${logoBase64}" class="logo-img" />` : ''}
@@ -323,6 +399,12 @@ export default function AdmissionFormModal({ isOpen, onClose }: AdmissionFormMod
                 </div>
                 <div style="font-size: 9px; font-weight: 900; color: #1a1a1a; display: flex; align-items: center; height: 32px;">DATE: ${formData.date || new Date().toISOString().split('T')[0]}</div>
               </div>
+              ${isPaid ? `
+              <div style="width: 100%; margin-top: 10px; display: flex; justify-content: center; gap: 20px;">
+                <div style="font-size: 8px; color: #059669; font-weight: 900; text-transform: uppercase;">Payment Status: SUCCESSFUL</div>
+                <div style="font-size: 8px; color: #1a1a1a; font-weight: 900; text-transform: uppercase;">TXN ID: ${razorpayPaymentId || 'N/A'}</div>
+                <div style="font-size: 8px; color: #1a1a1a; font-weight: 900; text-transform: uppercase;">Amount: ₹199.00</div>
+              </div>` : ''}
             </div>
 
             <div class="visuals-row">
@@ -948,30 +1030,88 @@ export default function AdmissionFormModal({ isOpen, onClose }: AdmissionFormMod
                 </button>
                 </form>
                 </div>
+            ) : !isPaid ? (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="p-10 text-center"
+              >
+                <div className="w-16 h-16 bg-brand/10 text-brand rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-black">₹</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2 uppercase tracking-tight">Payment Pending</h3>
+                <p className="text-gray-500 text-sm mb-6">Please complete the payment of ₹199 to finalize your admission and download the form.</p>
+                
+                <button
+                  onClick={() => admissionId && handlePayment(admissionId)}
+                  disabled={isVerifyingPayment}
+                  className="w-full max-w-xs mx-auto px-6 py-4 bg-brand text-white font-black rounded-lg hover:bg-ink transition-all flex items-center justify-center gap-3 shadow-xl"
+                >
+                  {isVerifyingPayment ? 'Verifying...' : 'Pay ₹199 Now'}
+                </button>
+                
+                <button
+                  onClick={() => setIsSubmitted(false)}
+                  className="mt-6 text-xs font-bold text-gray-400 hover:text-brand transition-colors uppercase tracking-widest"
+                >
+                  Go Back to Form
+                </button>
+              </motion.div>
             ) : (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="p-10 text-center"
+                className="p-8 text-center"
               >
-                <div className="w-16 h-16 bg-green-500 text-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-200">
-                  <CheckCircle2 size={32} />
+                <div className="w-20 h-20 bg-green-500 text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-green-100 border-4 border-white animate-bounce">
+                  <CheckCircle2 size={40} />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2 uppercase tracking-tight">Admission Confirmed!</h3>
-                <p className="text-gray-500 text-sm mb-2 font-medium">A copy of this form has been sent to:</p>
-                <p className="text-brand font-black text-xs mb-6 px-3 py-1 bg-ink inline-block rounded">{formData.email}</p>
                 
-                <div className="flex flex-col gap-3 justify-center items-center">
+                <h3 className="text-2xl font-black text-ink mb-1 uppercase tracking-tight">Admission Confirmed!</h3>
+                <div className="flex items-center justify-center gap-2 mb-6">
+                  <span className="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-black rounded-full uppercase">Payment Successful</span>
+                  <span className="px-3 py-1 bg-gray-100 text-gray-600 text-[10px] font-black rounded-full uppercase">TXN ID: {razorpayPaymentId}</span>
+                </div>
+
+                <div className="max-w-md mx-auto bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-6 mb-8 text-left relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                     <img src="/images/about_logos/bk.png" className="w-32" />
+                  </div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Official Receipt Copy</p>
+                  <div className="space-y-3">
+                    <div className="flex justify-between border-b border-gray-100 pb-2">
+                      <span className="text-xs font-bold text-gray-500">Student Name</span>
+                      <span className="text-xs font-black text-ink uppercase">{formData.firstName} {formData.surname}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-gray-100 pb-2">
+                      <span className="text-xs font-bold text-gray-500">Registration No</span>
+                      <span className="text-xs font-black text-brand tracking-widest">{formData.registrationNo}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-gray-100 pb-2">
+                      <span className="text-xs font-bold text-gray-500">Amount Paid</span>
+                      <span className="text-xs font-black text-green-600 font-mono">₹199.00</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs font-bold text-gray-500">Form Status</span>
+                      <span className="text-xs font-black text-blue-600 uppercase">Ready for Download</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col gap-4 justify-center items-center">
                   <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
                     <button
                       onClick={generatePDF}
-                      className="flex-1 max-w-[200px] px-6 py-3 bg-yellow-400 text-black font-bold rounded-lg hover:bg-yellow-500 transition-colors flex items-center justify-center gap-2 shadow-md shadow-yellow-100"
+                      className="flex-1 max-w-[240px] px-8 py-4 bg-brand text-white font-black rounded-xl hover:bg-ink transition-all flex items-center justify-center gap-3 shadow-2xl hover:scale-105 active:scale-95"
                     >
-                      <Download size={18} /> Download Form
+                      <Download size={20} /> Download Admission Form
                     </button>
                     <button
                       onClick={() => {
                         setIsSubmitted(false);
+                        setIsPaid(false);
+                        setAdmissionId(null);
+                        setRazorpayPaymentId(null);
                         setFormData({
                           photo: null,
                           signature: null,
@@ -1013,16 +1153,16 @@ export default function AdmissionFormModal({ isOpen, onClose }: AdmissionFormMod
                         });
                         setExpandedCategory(null);
                       }}
-                      className="flex-1 max-w-[200px] px-6 py-3 bg-ink text-brand font-bold rounded-lg hover:bg-black transition-colors flex items-center justify-center gap-2 shadow-md"
+                      className="flex-1 max-w-[240px] px-8 py-4 bg-ink text-brand font-black rounded-xl hover:bg-black transition-all flex items-center justify-center gap-3 shadow-xl hover:scale-105 active:scale-95"
                     >
-                      + Register Another
+                      + New Registration
                     </button>
                   </div>
                   <button
                     onClick={onClose}
-                    className="text-gray-400 hover:text-ink text-xs font-bold uppercase tracking-widest mt-4 border-b border-transparent hover:border-ink transition-all"
+                    className="text-gray-400 hover:text-ink text-[10px] font-black uppercase tracking-[0.2em] mt-6 border-b-2 border-transparent hover:border-ink transition-all"
                   >
-                    Back to Home
+                    Return to Homepage
                   </button>
                 </div>
               </motion.div>

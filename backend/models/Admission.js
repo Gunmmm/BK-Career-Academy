@@ -37,6 +37,9 @@ const admissionSchema = new mongoose.Schema({
   formNo: String,
   photoUrl: String,
   signatureUrl: String,
+  paymentOrderId: String,
+  paymentId: String,
+  paymentStatus: { type: String, default: 'Pending' },
   createdAt: { type: Date, default: Date.now }
 });
 

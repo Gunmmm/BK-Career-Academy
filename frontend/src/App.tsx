@@ -1,35 +1,39 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import { AnimatePresence } from "motion/react";
 
 // Components
 import RegistrationModal from './components/RegistrationModal';
 import AdmissionFormModal from './components/AdmissionFormModal';
 import ChatWidget from './components/ChatWidget';
-import AdminPortal from './components/AdminPortal';
-import LeadLogin from './components/LeadLogin';
 import ScrollToTop from './components/ScrollToTop';
-
-// Layout & Common
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 
-// Pages
-import { Home } from './pages/Home';
-import { Courses } from './pages/Courses';
-import { SyllabusPortal } from './pages/SyllabusPortal';
-import { AboutUPSC } from './pages/SyllabusContent/UPSCAbout';
-import { MPSCDetailsPage } from './pages/MPSCDetailsPage';
-import { PoliceDetailsPage } from './pages/PoliceDetailsPage';
-import { MAHATETDetailsPage } from './pages/MAHATETDetailsPage';
-import { SuccessStoriesPage } from './pages/SuccessStoriesPage';
-import { AboutUs } from './pages/AboutUs';
-import { DynamicExamDetailsPage } from './pages/DynamicExamDetailsPage';
-import AddStoryModal from './components/AddStoryModal';
-import { INITIAL_STORIES, Story } from './data/stories';
+// Lazy Loaded Pages for Performance
+const Home = lazy(() => import('./pages/Home'));
+const Courses = lazy(() => import('./pages/Courses'));
+const SyllabusPortal = lazy(() => import('./pages/SyllabusPortal'));
+const AboutUs = lazy(() => import('./pages/AboutUs'));
+const SuccessStoriesPage = lazy(() => import('./pages/SuccessStoriesPage'));
+const MPSCDetailsPage = lazy(() => import('./pages/MPSCDetailsPage'));
+const PoliceDetailsPage = lazy(() => import('./pages/PoliceDetailsPage'));
+const MAHATETDetailsPage = lazy(() => import('./pages/MAHATETDetailsPage'));
+const DynamicExamDetailsPage = lazy(() => import('./pages/DynamicExamDetailsPage'));
+const AdminPortal = lazy(() => import('./components/AdminPortal'));
+const LeadLogin = lazy(() => import('./components/LeadLogin'));
+const AddStoryModal = lazy(() => import('./components/AddStoryModal'));
 
 // Data
+import { INITIAL_STORIES, Story } from './data/stories';
 import { EXAM_CATEGORIES } from './data/constants';
+
+// Loading Component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="w-12 h-12 border-4 border-ink border-t-brand animate-spin rounded-full"></div>
+  </div>
+);
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -136,7 +140,7 @@ export default function App() {
         ...item,
         id: item._id, 
         image: item.image || '/home/card1.png',
-        isNew: true
+        isRecent: true
       }));
 
       // Process Exams (strictly from exams section)
@@ -146,7 +150,7 @@ export default function App() {
         ...item,
         id: item._id,
         image: item.image || '/home/card1.png',
-        isNew: true
+        isRecent: true
       }));
       
       setDynamicCourses(courses);
@@ -202,9 +206,22 @@ export default function App() {
 
     // Update Meta Description
     let metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute('content', currentSEO.description);
+    if (!metaDescription) {
+      metaDescription = document.createElement('meta');
+      metaDescription.setAttribute('name', 'description');
+      document.head.appendChild(metaDescription);
     }
+    metaDescription.setAttribute('content', currentSEO.description);
+
+    // Update Canonical URL
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    const path = view === 'home' ? '' : view;
+    canonical.setAttribute('href', `https://bkeducation.in/${path}`);
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setIsMenuOpen(false);
@@ -248,6 +265,7 @@ export default function App() {
                 }}
               />
               <div className="relative z-10 overflow-x-hidden">
+                <Suspense fallback={<PageLoader />}>
                 <AnimatePresence mode="wait">
                   {view === 'home' && (
                     <Home 
@@ -347,6 +365,7 @@ export default function App() {
                     />
                   )}
                 </AnimatePresence>
+                </Suspense>
 
                 <Footer 
                   setView={setView}
